@@ -18,7 +18,8 @@ env:
     S3_URL: http://minio
     #S3_URL_EXTERNAL: https://alfalfa-cbri.nrel.gov 
     #AWS S3 end point url example below. See docs on obtaining url using kubectl 
-    S3_URL_EXTERNAL: http://a767c1335c88545b6955157e38eabd0c-1443732694.us-west-2.elb.amazonaws.com:9000
+    # S3_URL_EXTERNAL: http://a767c1335c88545b6955157e38eabd0c-1443732694.us-west-2.elb.amazonaws.com:9000
+    S3_URL_EXTERNAL: http://minio:9000
     REDIS_HOST: redis
     S3_BUCKET: alfalfa
     REGION: us-west-1

@@ -4,13 +4,15 @@
 
 secret:
   name: "aws-secrets"
+namespace:
+  name: "cosim"
 
 env:
   public:
     JOB_QUEUE_URL: http://goaws:4100/queue/local-queue1
     JOB_QUEUE_URL_1: http://goaws:4100/queue/local-queue1
     JOB_QUEUE_URL_2: http://goaws:4100/queue/local-queue2
-    MONGO_URL: mongodb://mongo:27017/
+    MONGO_URL: mongodb://mongo:27017
     MONGO_DB_NAME: alfalfa
     LOGLEVEL: DEBUG
     NODE_ENV: production
