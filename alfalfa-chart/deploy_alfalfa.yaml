@@ -1,0 +1,528 @@
+# _______SECRETS/KEYS_________#
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: alfalfa
+
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: minio-secrets
+  namespace: alfalfa
+type: Opaque
+data:
+  access-key: YWxmYWxmYQ==
+  secret-key: YWxmYWxmYTEyMw==
+
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: aws-secrets
+  namespace: alfalfa
+type: Opaque
+data:
+  access-key: YWxmYWxmYQ==
+  secret-key: YWxmYWxmYTEyMw==
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: influxdb-secrets
+  namespace: alfalfa
+type: Opaque
+data:
+  INFLUXDB_ADMIN_USER: YWRtaW4K
+  INFLUXDB_ADMIN_PASSWORD: cGFzc3dvcmQ=
+---
+# Persistent Volume
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: cosim-pv
+  namespace: alfalfa
+spec:
+  storageClassName: manual
+  capacity:
+    storage: 5Gi
+  accessModes:
+    - ReadWriteOnce
+  hostPath:
+    path: "/mnt/data"
+---
+# Persistent Volume Claim
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: cosim-pvc
+  namespace: alfalfa
+spec:
+  accessModes:
+    - ReadWriteOnce
+  volumeMode: Filesystem
+  resources:
+    requests:
+      storage: 5Gi
+  storageClassName: hostpath
+
+
+# -------------- DEPLOYMENTS -------------- #
+---
+# goaws
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: goaws
+  namespace: alfalfa
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: goaws
+  template:
+    metadata:
+      labels:
+        app: goaws
+    spec:
+      containers:
+        - name: goaws
+          image: pafortin/goaws:v0.3.1
+          ports:
+            - containerPort: 4100
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: goaws
+  namespace: alfalfa
+spec:
+  type: ClusterIP
+  ports:
+    - name: goaws
+      port: 4100
+      targetPort: 4100
+  selector:
+    app: goaws
+
+---
+# Mongo
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mongo
+  namespace: alfalfa
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mongo
+  template:
+    metadata:
+      labels:
+        app: mongo
+    spec:
+      containers:
+        - name: mongo
+          image: mongo:5.0.14
+          ports:
+            - containerPort: 27017
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mongo
+  namespace: alfalfa
+spec:
+  type: ClusterIP
+  ports:
+    - name: mongo
+      port: 27017
+      targetPort: 27017
+  selector:
+    app: mongo
+
+---
+# Influx db
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: influxdb
+  namespace: alfalfa
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: influxdb
+  template:
+    metadata:
+      labels:
+        app: influxdb
+    spec:
+      containers:
+        - name: influxdb
+          image: influxdb:1.8
+          ports:
+            - containerPort: 8086
+          env:
+            - name: INFLUXDB_ADMIN_USER
+              valueFrom:
+                secretKeyRef:
+                  name: influxdb-secrets
+                  key:  INFLUXDB_ADMIN_USER
+            - name: INFLUXDB_ADMIN_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: influxdb-secrets
+                  key:  INFLUXDB_ADMIN_PASSWORD
+            - name: INFLUXDB_HTTP_AUTH_ENABLED
+              value: "false"
+            - name: INFLUXDB_DB
+              value: alfalfa
+---            
+apiVersion: v1
+kind: Service
+metadata:
+  name: influxdb
+  namespace: alfalfa
+spec:
+  selector:
+    app: influxdb
+  ports:
+    - name: influxdb
+      protocol: TCP
+      port: 8086
+      targetPort: 8086
+---
+# Redis
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: redis
+  namespace: alfalfa
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: redis
+  template:
+    metadata:
+      labels:
+        app: redis
+    spec:
+      containers:
+        - name: redis
+          image: redis:7.0.7
+          ports:
+            - containerPort: 6379
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: redis
+  namespace: alfalfa
+spec:
+  type: ClusterIP
+  ports:
+    - name: redis
+      port: 6379
+      targetPort: 6379
+  selector:
+    app: redis
+---
+# minio
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: minio
+  namespace: alfalfa
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: minio
+  template:
+    metadata:
+      labels:
+        app: minio
+    spec:
+      containers:
+        - name: minio
+          image: minio/minio:RELEASE.2021-01-16T02-19-44Z
+          args:
+            - server
+            - /data
+          env:
+            - name: MINIO_ACCESS_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: minio-secrets
+                  key: access-key
+            - name: MINIO_SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: minio-secrets
+                  key: secret-key
+          ports:
+            - containerPort: 9000
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: minio
+  namespace: alfalfa
+spec:
+  type: ClusterIP
+  ports:
+    - name: web-sns
+      protocol: TCP
+      port: 80
+      targetPort: 9000
+    - name: sns
+      protocol: TCP
+      port: 9000
+      targetPort: 9000
+  selector:
+    app: minio
+
+---
+# mc
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mc
+  namespace: alfalfa
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mc
+  template:
+    metadata:
+      labels:
+        app: mc
+    spec:
+      containers:
+        - name: mc
+          image: minio/mc:RELEASE.2022-12-13T00-23-28Z
+          env:
+            - name: MINIO_ACCESS_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: minio-secrets
+                  key: access-key
+            - name: MINIO_SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: minio-secrets
+                  key: secret-key
+          command: ["/bin/sh", "-c"]
+          args:
+            - >
+              sleep 5;
+              mc config host add myminio http://minio:9000 $${MINIO_ACCESS_KEY} $${MINIO_SECRET_KEY};
+              mc mb -p myminio/alfalfa;
+              mc anonymous set public myminio/alfalfa;
+---
+# worker
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: worker
+  namespace: alfalfa
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: worker
+  template:
+    metadata:
+      labels:
+        app: worker
+    spec:
+      initContainers:
+        - name: init-wait-for-db
+          image: alpine
+          command: ["/bin/sh", "-c", "for i in $(seq 1 300); do nc -zvw1 mongo 27017 && exit 0 || sleep 3; done; exit 1"]
+        - name: init-wait-for-minio
+          image: alpine
+          command: ["/bin/sh", "-c", "for i in $(seq 1 300); do nc -zvw1 minio 80 && exit 0 || sleep 3; done; exit 1"]
+        - name: init-wait-for-influxdb
+          image: alpine
+          command: ["/bin/sh", "-c", "for i in $(seq 1 300); do nc -zvw1 influxdb 8086 && exit 0 || sleep 3; done; exit 1"]
+      containers:
+        - name: worker
+          image: nrel/alfalfa-worker
+          env:
+            - name: AWS_ACCESS_KEY_ID
+              valueFrom:
+                secretKeyRef:
+                  name: aws-secrets
+                  key: access-key
+            - name: AWS_SECRET_ACCESS_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: aws-secrets
+                  key: secret-key
+            - name: HISTORIAN_ENABLE
+              value: "true" # or "false"
+            - name: INFLUXDB_ADMIN_USER
+              valueFrom:
+                secretKeyRef:
+                  name: influxdb-secrets
+                  key:  INFLUXDB_ADMIN_USER
+            - name: INFLUXDB_ADMIN_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: influxdb-secrets
+                  key:  INFLUXDB_ADMIN_PASSWORD
+            - name: INFLUXDB_DB
+              value: alfalfa
+            - name: INFLUXDB_HOST
+              value: influxdb
+            - name: JOB_QUEUE_URL
+              value: "http://goaws:4100/queue/local-queue1"
+            - name: LOGLEVEL
+              value: "INFO"
+            - name: MONGO_DB_NAME
+              value: "alfalfa"
+            - name: MONGO_URL
+              value: "mongodb://mongo:27017"
+            - name: NODE_ENV
+              value: "production"
+            - name: REDIS_HOST
+              value: "redis"
+            - name: REGION
+              value: "us-east-1"
+            - name: S3_BUCKET
+              value: "alfalfa"
+            - name: S3_URL
+              value: "http://minio:9000"
+---
+# web
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: web
+  namespace: alfalfa
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: web
+  template:
+    metadata:
+      labels:
+        app: web
+    spec:
+      initContainers:
+        - name: init-wait-for-db
+          image: alpine
+          command: ["/bin/sh", "-c", "for i in $(seq 1 300); do nc -zvw1 mongo 27017 && exit 0 || sleep 3; done; exit 1"]
+        - name: init-wait-for-minio
+          image: alpine
+          command: ["/bin/sh", "-c", "for i in $(seq 1 300); do nc -zvw1 minio 80 && exit 0 || sleep 3; done; exit 1"]
+      containers:
+        - name: web
+          image: nrel/alfalfa-web
+          env:
+            - name: AWS_ACCESS_KEY_ID
+              valueFrom:
+                secretKeyRef:
+                  name: aws-secrets
+                  key: access-key
+            - name: AWS_SECRET_ACCESS_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: aws-secrets
+                  key: secret-key
+            - name: GIT_COMMIT
+              value: "your_git_commit"
+            # - name: JOB_QUEUE_URL
+              # value: "http://us-east-1.goaws.com:4100/"
+            - name: JOB_QUEUE_URL
+              value: "http://goaws:4100/queue/local-queue1"
+            - name: MONGO_DB_NAME
+              value: "alfalfa"
+            - name: MONGO_URL
+              value: "mongodb://mongo:27017"
+            - name: NODE_ENV
+              value: "production"
+            - name: REDIS_HOST
+              value: "redis"
+            - name: REGION
+              value: "us-east-1"
+            - name: S3_BUCKET
+              value: "alfalfa"
+            - name: S3_URL
+              value: "http://minio:9000"
+            - name: S3_URL_EXTERNAL
+              value: "http://minio:9000"
+          ports:
+            - containerPort: 80
+            - containerPort: 29043
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: web
+  namespace: alfalfa
+spec:
+  type: ClusterIP
+  ports:
+    - name: http
+      port: 80
+      targetPort: 80
+    - name: other
+      port: 29043
+      targetPort: 29043
+  selector:
+    app: web
+---
+# Cosim
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cosim
+  namespace: alfalfa
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: cosim
+  template:
+    metadata:
+      labels:
+        app: cosim
+    spec:
+      initContainers:
+        - name: init-wait-for-web
+          image: alpine
+          command: ["/bin/sh", "-c", "for i in $(seq 1 300); do nc -zvw1 web 80 && exit 0 || sleep 3; done; exit 1"]
+      containers:
+        - name: cosim
+          image: kunind0/cosim
+          ports:
+            - containerPort: 5678
+          volumeMounts:
+            - name: cosim-storage
+              mountPath: /cosim/output
+      volumes:
+        - name: cosim-storage
+          persistentVolumeClaim:
+            claimName: cosim-pvc
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: cosim
+  namespace: alfalfa
+spec:
+  type: ClusterIP
+  ports:
+    - name: http
+      port: 5678
+      targetPort: 5678
+  selector:
+    app: cosim

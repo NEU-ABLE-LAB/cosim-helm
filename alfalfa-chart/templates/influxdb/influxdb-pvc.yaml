@@ -3,6 +3,7 @@ kind: PersistentVolumeClaim
 apiVersion: v1
 metadata:
   name: {{ .Values.influxdb.name  }}
+  namespace: {{ .Values.namespace.name }}
 spec:
   storageClassName: {{ .Values.storageClass }}
   accessModes:

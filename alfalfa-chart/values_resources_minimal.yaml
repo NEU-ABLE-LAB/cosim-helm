@@ -234,10 +234,10 @@ nginx_dashboard:
 worker:
   name: "worker" 
   label: "worker" 
-  replicas: 2
+  replicas: 1
   container:
     name: "worker"
-    image: "nrel/alfalfa-worker:0.2.0"
+    image: "nrel/alfalfa-worker"
     resources:
       limits:
         cpu: 1

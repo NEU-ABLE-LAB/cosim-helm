@@ -3,6 +3,7 @@ apiVersion: extensions/v1beta1
 kind: Ingress
 metadata:
   name: {{ .Values.minio.name }}
+  namespace: {{ .Values.namespace.name }}
 spec:
   rules:
   - host:  {{ .Values.rancher.hostnames.minio }}

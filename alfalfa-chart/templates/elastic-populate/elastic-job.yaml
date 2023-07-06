@@ -3,6 +3,7 @@ apiVersion: batch/v1
 kind: Job
 metadata:
   name: {{  .Values.elastic_job.name  }}
+  namespace: {{ .Values.namespace.name }}
 spec:
   template:
     metadata:

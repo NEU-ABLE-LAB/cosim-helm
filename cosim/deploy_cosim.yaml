@@ -1,0 +1,39 @@
+# # Cosim
+# apiVersion: apps/v1
+# kind: Deployment
+# metadata:
+#   name: {{ .Values.cosim.name }} #cosim
+#   namespace: {{  .Values.namespace.name  }} #alfalfa
+# spec:
+#   replicas: 1
+#   selector:
+#     matchLabels:
+#       app: {{ .Values.cosim.name }} #cosim
+#   template:
+#     metadata:
+#       labels:
+#         app: {{ .Values.cosim.name }} #cosim
+#     spec:
+#       initContainers:
+#         - name: init-wait-for-web
+#           image: alpine
+#           command: ["/bin/sh", "-c", "for i in $(seq 1 300); do nc -zvw1 {{ .Values.web.name }} {{ .Values.web.container.ports.http  }} && exit 0 || sleep 3; done; exit 1"]
+#         - name: init-change-permissions
+#           image: alpine
+#           command: ["/bin/sh", "-c", "chmod 777 /cosim/output"]
+#           volumeMounts:
+#             - name: cosim-storage
+#               mountPath: /cosim/output
+#       containers:
+#         - name: {{ .Values.cosim.name }} #cosim
+#           image: {{ .Values.cosim.container.image}} #kunind0/cosim
+#           ports:
+#             - containerPort: {{  .Values.cosim.container.ports.port }} #5678
+#           volumeMounts:
+#             - name: {{ .Values.cosim.container.volumeMounts.name }}  #cosim-storage
+#               mountPath: {{ .Values.cosim.container.volumeMounts.mountPath }}  #/cosim/output
+
+#       volumes:
+#         - name: {{ .Values.cosim.container.volumeMounts.name }}  #cosim-storage
+#           persistentVolumeClaim:
+#             claimName: {{ .Values.cosim.pvc.name}}  #cosim-pvc
