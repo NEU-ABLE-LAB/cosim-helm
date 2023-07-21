@@ -4,9 +4,9 @@
 
 secret:
   name: "aws-secrets"
+
 namespace:
   name: "cosim"
-
 env:
   public:
     JOB_QUEUE_URL: http://goaws:4100/queue/local-queue1
@@ -16,133 +16,95 @@ env:
     MONGO_DB_NAME: alfalfa
     LOGLEVEL: DEBUG
     NODE_ENV: production
-    S3_URL: http://minio:9000
-    S3_URL_EXTERNAL: http://127.0.0.1:9000
+    S3_URL: http://minio
+    #S3_URL_EXTERNAL: https://alfalfa-cbri.nrel.gov 
+    #AWS S3 end point url example below. See docs on obtaining url using kubectl 
+    S3_URL_EXTERNAL: http://minio:9000
     REDIS_HOST: redis
     S3_BUCKET: alfalfa
     REGION: us-west-1
     INFLUXDB_DB: alfalfa
     INFLUXDB_HOST: influxdb
-    INFLUXDB_HTTP_AUTH_ENABLED: true
+    # Need to start influx with this disabled first and then 
+    # can set to true
+    INFLUXDB_HTTP_AUTH_ENABLED: false
+    HISTORIAN_ENABLE: false
 
   private:
     AWS_ACCESS_KEY_ID: user
     AWS_SECRET_ACCESS_KEY: password
     INFLUXDB_ADMIN_USER: admin
     INFLUXDB_ADMIN_PASSWORD: password
+    GF_SECURITY_ADMIN_PASSWORD: password
+    GF_SECURITY_ADMIN_USER: admin
+
 
 # Set to google, aws, azure or docker-local
 # docker-local is the docker-desktop and used for local deployments
 provider: 
   name: "aws"
 
-domain_name: "localhost"
-
-nginx_https:
-  name: "nginx-https"
-  enable: false
-  domain_name: "localhost"
-
 tags:
   log_stack: false
 
-cluster:
-  name: "alfalfa" 
+# rancher uses netappnfs for storageClass
+storageClass: "ssd"
 
 mongo:
   name:  "mongo"
   label: "mongo"
   container:
     name: "mongo"
-    image: "mongo"
+    image: "mongo:5.0.14"
     resources:
       limits:
         cpu: 0.5
         memory: "1Gi"
       requests:
         cpu: 0.25
-        memory: "256Mi"
+        memory: "512Mi"
     ports:
       db_port: 27017
   persistence:
     enabled: true
-    storageClass: "ssd"
     size: 10Gi
     accessModes:
       - "ReadWriteOnce"
 
-certbot:
-  name:  "certbot"
-  label: "certbot"
+influxdb:
+  name:  "influxdb"
+  label: "influxdb"
   container:
-    name: "certbot"
-    image: "certbot/certbot"
+    name: "influxdb"
+    image: "influxdb:1.8"
     resources:
       limits:
-        cpu: 0.25
-        memory: "512Mi"
+        cpu: 1
+        memory: "2Gi"
       requests:
-        cpu: 0.1
-        memory: "256Mi"
+        cpu: 0.5
+        memory: "1G"
+    ports:
+      db_port: 8086
   persistence:
     enabled: true
-    storageClass: "ssd"
-    size: 1Gi
+    size: 10Gi
     accessModes:
       - "ReadWriteOnce"
-
-load_balancer:
-  name: "ingress-load-balancer"
-  externalTrafficPolicy: "Local"
-  label: "nginx-ingress"
-  ports:
-    http_name: "http" 
-    http_port: 80
-    http_protocol: "TCP"
-    http_test_name: "http-test" 
-    http_test_port: 29043
-    http_test_protocol: "TCP"
-    https_name: "https"
-    https_port: 443
-    https_protocol: "TCP"
-    sns_name: "sns" 
-    sns_port: 9000
-    sns_protocol: "TCP"
-    kibana_name: "kibana"
-    kibana_port: 5601
-    kibana_protocol: "TCP"
-    dashboard_name: "dashboard"
-    dashboard_port: 8081
-    dashboard_protocol: "TCP"
-  loadBalancerSourceRanges: 0.0.0.0/0
-
-nginx_ingress:
-  name: "nginx-ingress"
-  label: "nginx-ingress"
-  container:
-    name: "nginx-ingress"
-    image: "nginx:1.17.8"
-    resources:
-      limits:
-        cpu: 0.25
-        memory: "1Gi"
-      requests:
-        cpu: 0.1
-        memory: "256Mi"
 
 redis:
   name: "redis"
   label: "redis"
   container:
     name: "redis"
-    image: "redis:4.0.6"
+    image: "redis:7.0.7"
     resources:
       limits:
         cpu: 1
-        memory: "1Gi"
+        memory: "2Gi"
       requests:
         cpu: 0.5
-        memory: "256Mi"
+        memory: "1Gi"
     ports:
       redis: 6379
 
@@ -151,7 +113,7 @@ goaws:
   label: "goaws"
   container:
     name: "goaws"
-    image: "pafortin/goaws"
+    image: "pafortin/goaws:v0.3.1"
     resources:
       limits:
         cpu: 0.5
@@ -167,7 +129,7 @@ minio:
   label: "minio"
   container:
     name: "minio"
-    image: "minio/minio"
+    image: "minio/minio:RELEASE.2021-01-16T02-19-44Z"
     resources:
       limits:
         cpu: 0.5
@@ -177,10 +139,10 @@ minio:
         memory: "256Mi"
     ports:
       s3: 9000
+      web: 80
   persistence:
     enabled: true
-    storageClass: "ssd"
-    size: 100Gi
+    size: 10Gi
     accessModes:
       - "ReadWriteOnce"
 
@@ -189,7 +151,7 @@ mc:
   label: "mc"
   container:
     name: "mc"
-    image: "minio/mc"
+    image: "minio/mc:RELEASE.2022-12-13T00-23-28Z"
     resources:
       limits:
         cpu: 0.25
@@ -205,81 +167,74 @@ web:
   label: "web"
   container:
     name: "web"
-    image: "nrel/alfalfa-web:0.2.0"
+    image: "nrel/alfalfa-web"
     resources:
       limits:
         cpu: 1
         memory: "3Gi"
       requests:
         cpu: 0.5
-        memory: "512Mi"
+        memory: "1Gi"
     ports:
       http: 80
       test: 29043
 
-nginx_dashboard:
-  name: "nginx-dashboard"
-  label: "nginx-dashboard"
-  container:
-    name: "nginx-dashboard"
-    image: "nginx:1.17.8"
-    resources:
-      limits:
-        cpu: 0.25
-        memory: "1Gi"
-      requests:
-        cpu: 0.1
-        memory: "256Mi"
-    ports:
-      http: 8081
-
 worker:
   name: "worker" 
   label: "worker" 
-  replicas: 1
+  replicas: 2
   container:
     name: "worker"
     image: "nrel/alfalfa-worker"
+    resources:
+      requests:
+        cpu: "100m"
+        memory: "128Mi"
+      limits:
+        cpu: "610m"
+        memory: "450Mi"
+    terminationGracePeriodSeconds: 300
+
+cosim:
+  name: "cosim"
+  label: "cosim"
+  replicas: 1
+  container:
+    name: "cosim"
+    image: "neuablelab/cosim"
     resources:
       limits:
         cpu: 1
         memory: "4Gi"
       requests:
         cpu: 0.5
-        memory: "512Mi"
+        memory: "1Gi"
     terminationGracePeriodSeconds: 3600
+    ports:
+      port: 5678
+      targetPort: 5678
+    volumeMounts:
+      name: "cosim-storage"
+      mountPath: "/cosim/ip_op"
+  pv:
+    name: "cosim-pv"
+    spec:
+      storageClassName: "manual"
+      capacity:
+        storage: "5Gi"
+      accessModes: "ReadWriteOnce"
+      hostPath:
+        path: "/run/desktop/mnt/host/d/devel/CoSimAlfalfa/cosim/ip_op"
+        # path: "/Users/Grad/kunind/devel/k8_output"
+        type: "DirectoryOrCreate"
+  pvc:
+    name: "cosim-pvc"
+    spec:
+      accessModes: "ReadWriteOnce"
+      volumeMode: "Filesystem"
+      resources:
+        requests:
+          storage: "5Gi"
+      storageClassName: "manual"
 
 
-elastic_job:
-  name: "elastic-job"
-  label: "elastic-job"
-  container:
-    name: "elastic-job"
-    image: "elasticdump/elasticsearch-dump"
-    resources:
-      limits:
-        cpu: 0.25
-        memory: "512Mi"
-      requests:
-        cpu: 0.1
-        memory: "256Mi"
-
-
-elasticsearch:
-  resources:
-    requests:
-      cpu: "1000m"
-      memory: "512Mi"
-    limits:
-      cpu: "1000m"
-      memory: "2Gi"
-  replicas: 1
-  minimumMasterNodes: 1
-  # https://github.com/elastic/helm-charts/issues/783
-  clusterHealthCheckParams: 'wait_for_status=yellow&timeout=1s'
-  persistence:
-    enabled: true
-  esConfig:
-    elasticsearch.yml: |
-      xpack.security.enabled: false
-      ingest.geoip.downloader.enabled: false

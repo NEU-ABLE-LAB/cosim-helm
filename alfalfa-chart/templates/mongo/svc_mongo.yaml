@@ -1,0 +1,14 @@
+# mongo service
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Values.mongo.name }} # mongo
+  namespace: {{ .Values.namespace.name }} # alfalfa
+spec:
+  type: ClusterIP
+  ports:
+    - name: {{ .Values.mongo.name }} # mongo
+      port: {{ .Values.mongo.container.ports.db_port }} # 27017
+      targetPort: {{ .Values.mongo.container.ports.db_port }} # 27017
+  selector:
+    app: {{ .Values.mongo.name }} # mongo

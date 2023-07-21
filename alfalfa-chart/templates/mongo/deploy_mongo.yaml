@@ -1,0 +1,21 @@
+# Mongo
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Values.mongo.name }} # mongo
+  namespace: {{ .Values.namespace.name }} # alfalfa
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: {{ .Values.mongo.name }} # mongo
+  template:
+    metadata:
+      labels:
+        app: {{ .Values.mongo.name }} # mongo
+    spec:
+      containers:
+        - name: {{ .Values.mongo.name }} # mongo
+          image: {{ .Values.mongo.container.image }} # mongo:5.0.14
+          ports:
+            - containerPort: {{ .Values.mongo.container.ports.db_port }} # 27017

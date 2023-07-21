@@ -1,0 +1,14 @@
+# Persistent Volume Claim
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ .Values.cosim.pvc.name}} #cosim-pvc
+  namespace: {{ .Values.namespace.name }} #alfalfa
+spec:
+  accessModes:
+    - ReadWriteOnce
+  volumeMode: Filesystem
+  resources:
+    requests:
+      storage: {{  .Values.cosim.pvc.spec.resources.requests.storage}} #5Gi
+  storageClassName: {{  .Values.cosim.pvc.spec.storageClassName}} #hostpath

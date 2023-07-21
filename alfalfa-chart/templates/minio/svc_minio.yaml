@@ -1,0 +1,18 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Values.minio.name }} #minio
+  namespace: {{ .Values.namespace.name }} # alfalfa
+spec:
+  type: ClusterIP
+  ports:
+    - name: web-sns
+      protocol: TCP
+      port: {{ .Values.minio.container.ports.web  }}  #80
+      targetPort: {{ .Values.minio.container.ports.s3  }} #9000
+    - name: sns
+      protocol: TCP
+      port: {{ .Values.minio.container.ports.s3  }} #9000
+      targetPort: {{ .Values.minio.container.ports.s3  }} # 9000
+  selector:
+    app: {{ .Values.minio.name  }} #minio

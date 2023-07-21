@@ -1,0 +1,39 @@
+# mc
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Values.mc.name }} #mc
+  namespace: {{ .Values.namespace.name }} #alfalfa
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: {{ .Values.mc.name }} #mc
+  template:
+    metadata:
+      labels:
+        app: {{ .Values.mc.name }} #mc
+    spec:
+      initContainers:
+        - name: init-wait-for-minio
+          image: alpine
+          command: ["/bin/sh", "-c", "for i in $(seq 1 300); do nc -zvw1 {{  .Values.minio.name }} {{ .Values.minio.container.ports.web  }} && exit 0 || sleep 3; done; exit 1"]
+      containers:
+        - name: {{ .Values.mc.container.name }} #mc
+          image: {{.Values.mc.container.image}} #minio/mc:RELEASE.2022-12-13T00-23-28Z
+          imagePullPolicy: "IfNotPresent"
+          command: ["/bin/sh","-c"]
+          args: ["sleep 5; /usr/bin/mc config host add myminio http://minio $MINIO_ACCESS_KEY $MINIO_SECRET_KEY; /usr/bin/mc mb  myminio/alfalfa; /usr/bin/mc policy set public myminio/alfalfa" ]
+          env:
+            - name: MINIO_ACCESS_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.secret.name  }}
+                  key: AWS_ACCESS_KEY_ID
+            - name: MINIO_SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.secret.name  }}
+                  key: AWS_SECRET_ACCESS_KEY
+        # restartPolicy: Never
+  # backoffLimit: 5

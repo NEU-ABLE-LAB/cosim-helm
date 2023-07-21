@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Values.goaws.name }} #goaws
+  namespace: {{ .Values.namespace.name }} # alfalfa
+spec:
+  type: ClusterIP
+  ports:
+    - name: {{ .Values.goaws.name }} # goaws
+      port: {{ .Values.goaws.container.ports.sns }} # 4100
+      targetPort: {{ .Values.goaws.container.ports.sns }} # 4100
+  selector:
+    app: {{ .Values.goaws.name }} # goaws

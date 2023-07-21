@@ -1,0 +1,39 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ .Values.cosim.name }}
+  namespace: {{  .Values.namespace.name  }}
+spec:
+  template:
+    metadata:
+      labels:
+        app: {{ .Values.cosim.name }}
+    spec:
+      initContainers:
+        - name: init-wait-for-web
+          image: alpine
+          command: ["/bin/sh", "-c", "for i in $(seq 1 300); do nc -zvw1 {{ .Values.web.name }} {{ .Values.web.container.ports.http  }} && exit 0 || sleep 3; done; exit 1"]
+        - name: init-change-permissions
+          image: alpine
+          command: ["/bin/sh", "-c", "chmod 777 /cosim/"]
+          volumeMounts:
+            - name: cosim-storage
+              mountPath: /cosim/ip_op
+      containers:
+        - name: {{ .Values.cosim.name }} 
+          image: {{ .Values.cosim.container.image}} 
+          ports:
+            - containerPort: {{  .Values.cosim.container.ports.port }} 
+          volumeMounts:
+            - name: {{ .Values.cosim.container.volumeMounts.name }} 
+              mountPath: {{ .Values.cosim.container.volumeMounts.mountPath }}  
+          resources:
+            requests:
+              memory: "10Gi"
+            limits:
+              memory: "15Gi"
+      volumes:
+        - name: {{ .Values.cosim.container.volumeMounts.name }} 
+          persistentVolumeClaim:
+            claimName: {{ .Values.cosim.pvc.name}}
+      restartPolicy: Never

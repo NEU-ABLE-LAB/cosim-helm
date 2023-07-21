@@ -1,0 +1,14 @@
+# Influx db 
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Values.influxdb.name }} #influxdb
+  namespace: {{.Values.namespace.name}} #alfalfa
+spec:
+  selector:
+    app: {{ .Values.influxdb.name }} #influxdb
+  ports:
+    - name: {{ .Values.influxdb.name }} #influxdb
+      protocol: TCP
+      port: {{ .Values.influxdb.container.ports.db_port }} #8086
+      targetPort: {{ .Values.influxdb.container.ports.db_port }} #8086

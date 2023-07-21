@@ -1,0 +1,21 @@
+# Redis
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Values.redis.name }} # redis
+  namespace: {{ .Values.namespace.name }} # alfalfa
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: {{ .Values.redis.name }} # redis
+  template:
+    metadata:
+      labels:
+        app: {{ .Values.redis.name }} # redis
+    spec:
+      containers:
+        - name: {{ .Values.redis.container.name }} # redis
+          image: {{ .Values.redis.container.image }} # redis:7.0.7
+          ports:
+            - containerPort: {{ .Values.redis.container.ports.redis }} #6379

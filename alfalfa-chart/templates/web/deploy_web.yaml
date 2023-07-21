@@ -1,0 +1,58 @@
+# web
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Values.web.name }} #web
+  namespace: {{ .Values.namespace.name }} #alfalfa
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: {{ .Values.web.name }} #web
+  template:
+    metadata:
+      labels:
+        app: {{ .Values.web.name }} #web
+    spec:
+      initContainers:
+        - name: init-wait-for-db
+          image: alpine
+          command: ["/bin/sh", "-c", "for i in $(seq 1 300); do nc -zvw1 {{  .Values.mongo.name  }} {{ .Values.mongo.container.ports.db_port }} && exit 0 || sleep 3; done; exit 1"]
+        - name: init-wait-for-minio
+          image: alpine
+          command: ["/bin/sh", "-c", "for i in $(seq 1 300); do nc -zvw1 {{  .Values.minio.name  }} {{ .Values.minio.container.ports.web  }} && exit 0 || sleep 3; done; exit 1"]
+      containers:
+        - name: {{ .Values.web.container.name  }}
+          image: {{ .Values.web.container.image  }}
+          env:
+            - name: AWS_ACCESS_KEY_ID
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.secret.name  }}
+                  key: AWS_ACCESS_KEY_ID
+            - name: AWS_SECRET_ACCESS_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.secret.name  }}
+                  key: AWS_SECRET_ACCESS_KEY
+            - name: JOB_QUEUE_URL
+              value: {{ .Values.env.public.JOB_QUEUE_URL }}
+            - name: MONGO_DB_NAME
+              value: {{ .Values.env.public.MONGO_DB_NAME }}
+            - name: MONGO_URL
+              value: {{ .Values.env.public.MONGO_URL }}
+            - name: NODE_ENV
+              value: {{ .Values.env.public.NODE_ENV }}
+            - name: REDIS_HOST
+              value: {{ .Values.env.public.REDIS_HOST }}
+            - name: REGION
+              value: {{ .Values.env.public.REGION }}
+            - name: S3_BUCKET
+              value: {{ .Values.env.public.S3_BUCKET }}
+            - name: S3_URL
+              value: {{ .Values.env.public.S3_URL }}
+            - name: S3_URL_EXTERNAL
+              value: {{ .Values.env.public.S3_URL_EXTERNAL }}
+          ports:
+            - containerPort: {{ .Values.web.container.ports.http  }}
+            - containerPort: {{ .Values.web.container.ports.test  }}

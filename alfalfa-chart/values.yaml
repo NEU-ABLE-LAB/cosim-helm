@@ -384,44 +384,44 @@ filebeat:
         host: '${NODE_NAME}'
         hosts: '${ELASTICSEARCH_HOSTS:elasticsearch-master:9200}'
 
-# cosim:
-#   name: "cosim"
-#   label: "cosim"
-#   replicas: 1
-#   container:
-#     name: "cosim"
-#     image: "kunind0/cosim"
-#     resources:
-#       limits:
-#         cpu: 1
-#         memory: "4Gi"
-#       requests:
-#         cpu: 0.5
-#         memory: "1Gi"
-#     terminationGracePeriodSeconds: 3600
-#     ports:
-#       port: 5678
-#       targetPort: 5678
-#     volumeMounts:
-#       name: "cosim-storage"
-#       mountPath: "/cosim/output"
-#   pv:
-#     name: "cosim-pv"
-#     spec:
-#       storageClassName: "manual"
-#       capacity:
-#         storage: "5Gi"
-#       accessModes: "ReadWriteOnce"
-#       hostPath:
-#         path: "/run/desktop/mnt/host/d/devel/k8_output"
-#         # path: "/Users/Grad/kunind/devel/k8_output"
-#         type: "DirectoryOrCreate"
-#   pvc:
-#     name: "cosim-pvc"
-#     spec:
-#       accessModes: "ReadWriteOnce"
-#       volumeMode: "Filesystem"
-#       resources:
-#         requests:
-#           storage: "5Gi"
-#       storageClassName: "manual"
+cosim:
+  name: "cosim"
+  label: "cosim"
+  replicas: 1
+  container:
+    name: "cosim"
+    image: "kunind0/cosim"
+    resources:
+      limits:
+        cpu: 1
+        memory: "4Gi"
+      requests:
+        cpu: 0.5
+        memory: "1Gi"
+    terminationGracePeriodSeconds: 3600
+    ports:
+      port: 5678
+      targetPort: 5678
+    volumeMounts:
+      name: "cosim-storage"
+      mountPath: "/cosim/output"
+  pv:
+    name: "cosim-pv"
+    spec:
+      storageClassName: "manual"
+      capacity:
+        storage: "5Gi"
+      accessModes: "ReadWriteOnce"
+      hostPath:
+        path: "/run/desktop/mnt/host/d/devel/CoSimAlfalfa/cosim/ip_op"
+        # path: "/Users/Grad/kunind/devel/k8_output"
+        type: "DirectoryOrCreate"
+  pvc:
+    name: "cosim-pvc"
+    spec:
+      accessModes: "ReadWriteOnce"
+      volumeMode: "Filesystem"
+      resources:
+        requests:
+          storage: "5Gi"
+      storageClassName: "manual"

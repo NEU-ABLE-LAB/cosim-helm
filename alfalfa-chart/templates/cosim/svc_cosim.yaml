@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Values.cosim.name }} #cosim
+  namespace: {{  .Values.namespace.name  }} #alfalfa
+spec:
+  type: ClusterIP
+  ports:
+    - name: http
+      port: {{  .Values.cosim.container.ports.port }} #5678
+      targetPort: {{  .Values.cosim.container.ports.targetPort }} #5678
+  selector:
+    app: {{ .Values.cosim.name }} #cosim

@@ -1,0 +1,21 @@
+# goaws
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Values.goaws.name }}
+  namespace: {{ .Values.namespace.name }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: {{ .Values.goaws.name }}
+  template:
+    metadata:
+      labels:
+        app: {{ .Values.goaws.name }}
+    spec:
+      containers:
+        - name: {{ .Values.goaws.name }}
+          image: {{ .Values.goaws.container.image }}
+          ports:
+            - containerPort: {{ .Values.goaws.container.ports.sns }}

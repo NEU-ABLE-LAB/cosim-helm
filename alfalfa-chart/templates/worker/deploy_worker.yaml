@@ -1,0 +1,81 @@
+# worker
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{  .Values.worker.name }} #worker
+  namespace: {{ .Values.namespace.name }} #alfalfa
+spec:
+  replicas: {{.Values.worker.replicas}}
+  selector:
+    matchLabels:
+      app: {{ .Values.worker.name }} #worker
+  template:
+    metadata:
+      labels:
+        app: {{  .Values.worker.name }} #worker
+    spec:
+      initContainers:
+        - name: init-wait-for-db
+          image: alpine
+          command: ["/bin/sh", "-c", "for i in $(seq 1 300); do nc -zvw1 {{  .Values.mongo.name  }} {{ .Values.mongo.container.ports.db_port }} && exit 0 || sleep 3; done; exit 1"]
+        - name: init-wait-for-minio
+          image: alpine
+          command: ["/bin/sh", "-c", "for i in $(seq 1 300); do nc -zvw1 {{  .Values.minio.name  }} {{ .Values.minio.container.ports.web  }} && exit 0 || sleep 3; done; exit 1"]
+        - name: init-wait-for-influxdb
+          image: alpine
+          command: ["/bin/sh", "-c", "for i in $(seq 1 300); do nc -zvw1 {{  .Values.influxdb.name  }} {{ .Values.influxdb.container.ports.db_port  }} && exit 0 || sleep 3; done; exit 1"]
+      containers:
+        - name: {{  .Values.worker.name }} #worker
+          image: {{  .Values.worker.container.image }} #nrel/alfalfa-worker
+          # resources: 
+          #   requests:
+          #     memory: {{ .Values.worker.container.resources.requests.memory }} # "64Mi"
+          #     cpu: {{ .Values.worker.container.resources.requests.cpu }} # "50m"
+          #   limits:
+          #     memory: {{ .Values.worker.container.resources.limits.memory }} # "128Mi"
+          #     cpu: {{ .Values.worker.container.resources.limits.cpu }} # "100m"
+          env:
+            - name: AWS_ACCESS_KEY_ID
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.secret.name  }}
+                  key: AWS_ACCESS_KEY_ID
+            - name: AWS_SECRET_ACCESS_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.secret.name  }}
+                  key: AWS_SECRET_ACCESS_KEY
+            - name: HISTORIAN_ENABLE
+              value: {{ .Values.env.public.HISTORIAN_ENABLE | quote }}
+            - name: INFLUXDB_ADMIN_USER
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.secret.name  }}
+                  key:  INFLUXDB_ADMIN_USER
+            - name: INFLUXDB_ADMIN_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.secret.name  }}
+                  key:  INFLUXDB_ADMIN_PASSWORD
+            - name: INFLUXDB_DB
+              value: {{ .Values.env.public.INFLUXDB_DB }}
+            - name: INFLUXDB_HOST
+              value: {{ .Values.env.public.INFLUXDB_HOST }}
+            - name: JOB_QUEUE_URL
+              value: {{ .Values.env.public.JOB_QUEUE_URL }}
+            - name: LOGLEVEL
+              value: {{ .Values.env.public.LOGLEVEL }}
+            - name: MONGO_DB_NAME
+              value: {{ .Values.env.public.MONGO_DB_NAME }}
+            - name: MONGO_URL
+              value: {{ .Values.env.public.MONGO_URL }}
+            - name: NODE_ENV
+              value:  {{ .Values.env.public.NODE_ENV }}
+            - name: REDIS_HOST
+              value: {{ .Values.env.public.REDIS_HOST }}
+            - name: REGION
+              value: {{ .Values.env.public.REGION }}
+            - name: S3_BUCKET
+              value: {{ .Values.env.public.S3_BUCKET }}
+            - name: S3_URL
+              value: {{ .Values.env.public.S3_URL }}

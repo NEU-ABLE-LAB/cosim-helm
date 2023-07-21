@@ -1,5 +1,0 @@
-- name: "default"
-  folder: ""
-  type: "file"
-  options:
-    folder: "/var/lib/grafana/dashboards"

@@ -1,0 +1,14 @@
+# Persistent Volume
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: {{ .Values.cosim.pv.name}} #cosim-pv
+  namespace: {{ .Values.namespace.name }} #alfalfa
+spec:
+  storageClassName: manual
+  capacity:
+    storage: {{  .Values.cosim.pv.spec.capacity.storage}} #5Gi
+  accessModes:
+    - ReadWriteOnce
+  hostPath:
+    path: {{ .Values.cosim.pv.spec.hostPath.path }} #"/mnt/data"

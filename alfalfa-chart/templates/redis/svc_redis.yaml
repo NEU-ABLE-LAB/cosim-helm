@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Values.redis.name}} #redis
+  namespace: {{ .Values.namespace.name }}  #alfalfa
+spec:
+  type: ClusterIP
+  ports:
+    - name: {{ .Values.redis.name}} #redis
+      port: {{ .Values.redis.container.ports.redis}} #6379
+      targetPort: {{ .Values.redis.container.ports.redis}} #6379
+  selector:
+    app: {{ .Values.redis.name}} #redis
