@@ -42,7 +42,7 @@ env:
 # Set to google, aws, azure or docker-local
 # docker-local is the docker-desktop and used for local deployments
 provider: 
-  name: "aws"
+  name: "docker-local"
 
 tags:
   log_stack: false
@@ -167,7 +167,7 @@ web:
   label: "web"
   container:
     name: "web"
-    image: "nrel/alfalfa-web"
+    image: "ghcr.io/nrel/alfalfa/web:latest" # "nrel/alfalfa-web"
     resources:
       limits:
         cpu: 1
@@ -182,10 +182,10 @@ web:
 worker:
   name: "worker" 
   label: "worker" 
-  replicas: 2
+  replicas: 5
   container:
     name: "worker"
-    image: "nrel/alfalfa-worker"
+    image: "ghcr.io/nrel/alfalfa/worker:latest" #"nrel/alfalfa-worker"
     resources:
       requests:
         cpu: "100m"
