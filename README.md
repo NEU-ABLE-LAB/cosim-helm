@@ -1,19 +1,19 @@
 # Alfalfa Helm Chart with CoSim container
-
 [Alfalfa](https://github.com/NREL/alfalfa) is an open source web application forged in the melting pot of Building Energy Modeling (BEM), Building Controls, and Software Engineering domain expertise.​ Alfalfa transforms a Building Energy Models (BEMs) into virtual buildings by providing industry standard building control interfaces for interacting with models as they run.​ From a software engineering perspective, Alfalfa leverages widely adopted open source products and is architected according to best practices for a robust, modular, and scalable architecture.
 
 [CoSimAlfalfa](https://github.com/NEU-ABLE-LAB/CoSimAlfalfa/) is a container that allows one to run building simulation experiments with the digital twins of occupants.
 
 ## Introduction
-
 This helm chart installs a Alfalfa web application instance that interacts with the CoSim pod on a [Kubernetes](http://kubernetes.io) cluster using the [Helm](https://helm.sh) package manager. 
 
 ## Prerequisites
-
 - Kubernetes 1.8+ cluster: [Docker desktop with Kubernetes integration](https://docs.docker.com/desktop/kubernetes/)
 - Cosim container access: [CoSimAlfalfa](https://github.com/NEU-ABLE-LAB/CoSimAlfalfa)
 
 ## Installing metrics server
+**NOTE: You would not need to do this for every deployment. This is a one time setup. If any errors start showing up in the logs of the pods, you can install the metrics servers using these steps.**
+
+
 To check the resources used by each pod in deployment, metrics server service is used. 
 1. Download the Metrics Server deployment YAML file using `PowerShell`, you can use the Invoke-WebRequest `cmdlet`:
 
@@ -61,7 +61,6 @@ To check the resources used by each pod in deployment, metrics server service is
    ```
 Please note that these instructions assume that you're running a cluster where you have sufficient permissions to install add-ons. If you're using a managed Kubernetes service provided by a cloud vendor, the process to install Metrics Server may be different and you may need to refer to the vendor's documentation or contact their support for help.
 ## Cosim image update
-
 **NOTE: YOU NEED TO HAVE ACCESS TO NEUABLELAB ACCOUNT ON DOCKERHUB AND COSIMALFALFA REPO ON GIT. Please contact the ABLE_LAB team for questions.**
 
 1. Edit the [CoSimMain.py](https://github.com/NEU-ABLE-LAB/CoSimAlfalfa/blob/main/cosim/src/CoSimMain.py) file: 
@@ -84,15 +83,14 @@ Please note that these instructions assume that you're running a cluster where y
    docker push neuablelab/cosim
    ```
 ## Installing the Chart
-
 To install the helm chart with the chart name `alfalfa`, you can run the following commands (below) in the root directory of this repo:
 For quick install using the default settings, you can launch the cluster using on the options below. For local deployment (e.g. docker-desktop or minikube)
 ```
 helm install simulation ./alfalfa-chart --set worker.replicas=5 --values ./alfalfa-chart/values_resources_minimal.yaml
 ```
 **Note: `--set worker.replicas=5` is based on the number of parallel simuations to be run which was defined [Cosim image update](#cosim-image-update) section of this readme.** 
-## Uninstalling the Chart
 
+## Uninstalling the Chart
 To uninstall/delete the `simulation` helm chart:
 ```
 helm delete simulation
@@ -100,7 +98,6 @@ helm delete simulation
 The command removes all the Kubernetes components associated with the chart and deletes the release *including* persistent volumes. See more about persistent volumes below. *Make sure to run this command before deleting the k8s cluster itself as many cloud providers retain the persistent volumes on k8s deletion. The helm delete command will remove everything. 
 
 ## Accessing alfalfa
-
 Once you install the chart it'll take a couple of minutes to start all the containers. You can verify all the Kubernetes pods are up in running by running the following. As the pods are deployed under the namespace `cosim` (can be found in [values.yaml](alfalfa-chart/values.yaml) or [values_resources_minimal.yaml](alfalfa-chart/values_resources_minimal.yaml)): 
 ```
 kubectl get pods -n cosim
@@ -143,9 +140,4 @@ worker-57cc98d55f-hxthn    646m         962Mi
 worker-57cc98d55f-mx4f2    632m         953Mi
 ```
 ## Persistent Volumes
-
-This helm chart provisions persistent storage for the database (MongoDB) and the cosim container (Outputs the simulations runs dataframes in `.parquet.gzip` files). The database volume will persist throughout the life of the helm chart while it's running and will **NOT** persist if you delete the helm chart. The cosim container's volume will will persist, more specifically the path listed in `cosim.pv.spec.hostPath.path` which can be found in [values_resources_minimal.yaml](alfalfa-chart/values_resources_minimal.yaml) file.   
-
-<!-- ## Auto Scaling
-
-The worker pods __can__ be configured to auto-scale based on CPU threshold (default 50%). So once the aggregate CPU for all worker pods exceeds the defined threshold (in this case 50%), the Kubernetes engine will start adding additional worker pods up to the maximum specified. This is also dependent on how the Kuebernetes cluster was configured as additional VM node instances will also be added. Please refer to the notes on [aws](/aws/README.md) and [google](/google/README.md) when setting up the cluster and note the instance type and maximum nodes specified.   -->
+This helm chart provisions persistent storage for the database (MongoDB) and the cosim container (Outputs the simulations runs dataframes in `.parquet.gzip` files). The database volume will persist throughout the life of the helm chart while it's running and will **NOT** persist if you delete the helm chart. The cosim container's volume will will persist, more specifically the path listed in `cosim.pv.spec.hostPath.path` which can be found in [values_resources_minimal.yaml](alfalfa-chart/values_resources_minimal.yaml) file.
