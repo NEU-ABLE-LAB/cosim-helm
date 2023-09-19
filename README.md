@@ -60,7 +60,7 @@ To check the resources used by each pod in deployment, metrics server service is
    kubectl top pod -n cosim
    ```
 Please note that these instructions assume that you're running a cluster where you have sufficient permissions to install add-ons. If you're using a managed Kubernetes service provided by a cloud vendor, the process to install Metrics Server may be different and you may need to refer to the vendor's documentation or contact their support for help.
-## Cosim image update
+<!-- ## Cosim image update
 **NOTE: YOU NEED TO HAVE ACCESS TO NEUABLELAB ACCOUNT ON DOCKERHUB AND COSIMALFALFA REPO ON GIT. Please contact the ABLE_LAB team for questions.**
 
 1. Edit the [CoSimMain.py](https://github.com/NEU-ABLE-LAB/CoSimAlfalfa/blob/main/cosim/src/CoSimMain.py) file: 
@@ -81,14 +81,15 @@ Please note that these instructions assume that you're running a cluster where y
 3. Push the docker image: Using cmd, the docker image can be pushed to neuablelab image repo with the command:
    ```
    docker push neuablelab/cosim
-   ```
+   ``` -->
 ## Installing the Chart
 To install the helm chart with the chart name `alfalfa`, you can run the following commands (below) in the root directory of this repo:
 For quick install using the default settings, you can launch the cluster using on the options below. For local deployment (e.g. docker-desktop or minikube)
 ```
-helm install simulation ./alfalfa-chart --set worker.replicas=5 --values ./alfalfa-chart/values_resources_minimal.yaml
+helm install simulation ./alfalfa-chart --values ./alfalfa-chart/values_resources_minimal.yaml
 ```
-**Note: `--set worker.replicas=5` is based on the number of parallel simuations to be run which was defined [Cosim image update](#cosim-image-update) section of this readme.** 
+**Note: Please ensure that `worker` and the `cosim` containers' values are as required. `worker.replicas` and `cosim.env_params.NUM_PARALLEL_PROCESS` values are based on the number of parallel simuations to be run which is based on your system's physical cores.**
+<!-- was defined [Cosim image update](#cosim-image-update) section of this readme.**  -->
 
 ## Uninstalling the Chart
 To uninstall/delete the `simulation` helm chart:
