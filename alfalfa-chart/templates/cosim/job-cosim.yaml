@@ -32,6 +32,20 @@ spec:
               memory: "10Gi"
             limits:
               memory: "15Gi"
+          env:
+            - name: TIME_STEP_SIZE
+              value: "{{ .Values.cosim.env_params.TIME_STEP_SIZE }}"
+            - name: TOTAL_EXPS
+              value: "{{ .Values.cosim.env_params.TOTAL_EXPS }}"
+            - name: DAYS_PER_EXP
+              value: "{{ .Values.cosim.env_params.DAYS_PER_EXP }}"
+            - name: STEPS_TO_RUN
+              value: "{{ .Values.cosim.env_params.STEPS_TO_RUN }}"
+            - name: NUM_MODELS
+              value: "{{ .Values.cosim.env_params.NUM_MODELS }}"
+            - name: NUM_PARALLEL_PROCESS
+              value: "{{ .Values.cosim.env_params.NUM_PARALLEL_PROCESS }}"
+
       volumes:
         - name: {{ .Values.cosim.container.volumeMounts.name }} 
           persistentVolumeClaim:

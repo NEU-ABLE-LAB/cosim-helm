@@ -182,7 +182,7 @@ web:
 worker:
   name: "worker" 
   label: "worker" 
-  replicas: 5
+  replicas: 10
   container:
     name: "worker"
     image: "ghcr.io/nrel/alfalfa/worker:latest" #"nrel/alfalfa-worker"
@@ -216,6 +216,13 @@ cosim:
     volumeMounts:
       name: "cosim-storage"
       mountPath: "/cosim/ip_op"
+  env_params:
+    TIME_STEP_SIZE: "1"
+    TOTAL_EXPS: "148"
+    DAYS_PER_EXP: "2"
+    STEPS_TO_RUN: "426240"
+    NUM_MODELS: "10"
+    NUM_PARALLEL_PROCESS: "10"
   pv:
     name: "cosim-pv"
     spec:
