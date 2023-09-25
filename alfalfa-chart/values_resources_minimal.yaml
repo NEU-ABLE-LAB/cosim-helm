@@ -1,7 +1,7 @@
 # Default values for alfalfa.
 # This is a YAML-formatted file.
 # Declare variables to be passed into your templates.
-
+# helm install simulation ./alfalfa-chart --values ./alfalfa-chart/values_resources_minimal.yaml
 secret:
   name: "aws-secrets"
 
@@ -218,10 +218,10 @@ cosim:
       mountPath: "/cosim/ip_op"
   env_params:
     TIME_STEP_SIZE: "1"
-    TOTAL_EXPS: "148"
-    DAYS_PER_EXP: "2"
-    STEPS_TO_RUN: "426240"
-    NUM_MODELS: "10"
+    TOTAL_EXPS: "89"
+    DAYS_PER_EXP: "14"
+    STEPS_TO_RUN: "20160"
+    NUM_MODELS: "89"
     NUM_PARALLEL_PROCESS: "10"
   pv:
     name: "cosim-pv"

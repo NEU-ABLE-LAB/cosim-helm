@@ -44,7 +44,7 @@ spec:
             - name: NUM_MODELS
               value: "{{ .Values.cosim.env_params.NUM_MODELS }}"
             - name: NUM_PARALLEL_PROCESS
-              value: "{{ .Values.cosim.env_params.NUM_PARALLEL_PROCESS }}"
+              value: "{{.Values.worker.replicas}}"
 
       volumes:
         - name: {{ .Values.cosim.container.volumeMounts.name }} 

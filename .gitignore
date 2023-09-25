@@ -5,3 +5,7 @@
 *.sublime-projet
 *.cache
 *.DS_Store
+components.yaml
+*.log
+getPodInfo.sh
+metrics-server-deployment.yaml
